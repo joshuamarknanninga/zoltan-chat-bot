@@ -2,110 +2,77 @@
 
 /**
  * Chat Controller
- * Handles incoming chat messages, performs sentiment analysis,
- * adjusts responses based on sentiment, and communicates with OpenAI API.
+ * 
+ * This controller handles incoming chat messages from the client,
+ * analyzes the sentiment of the message, generates an appropriate
+ * response based on the sentiment, and sends the response back to the client.
+ * 
+ * Dependencies:
+ * - sentimentService: For analyzing the sentiment of the message.
+ * - responseService: For generating responses based on sentiment.
+ * - winston: For logging errors and information.
  */
 
-const axios = require('axios');
-const logger = require('../utils/logger');
 const { analyzeSentiment } = require('../services/sentimentService');
+const { generateResponse } = require('../services/responseService');
+const logger = require('../utils/logger');
 
 /**
- * Handle incoming chat messages and respond using OpenAI API with sentiment-aware adjustments.
- *
+ * Handle Chat Request
+ * 
  * @param {Object} req - Express request object.
  * @param {Object} res - Express response object.
- * @param {Function} next - Express next middleware function.
+ * 
+ * Expects:
+ * - req.body.message: The chat message sent by the client.
+ * 
+ * Responses:
+ * - 200: Successful response with generated reply.
+ * - 400: Bad request if message is missing.
+ * - 500: Internal server error for unexpected issues.
  */
-const handleChat = async (req, res, next) => {
-  const { message } = req.body;
-
-  // Input Validation
-  if (!message || typeof message !== 'string' || message.trim().length === 0) {
-    logger.warn('Invalid message received.');
-    return res.status(400).json({ error: 'Invalid message provided.' });
-  }
-
+const handleChat = async (req, res) => {
   try {
-    // Perform Sentiment Analysis
-    const sentimentResult = analyzeSentiment(message);
-    const sentimentScore = sentimentResult.score;
-    let sentimentLabel = 'neutral';
+    // Extract the message from the request body
+    const { message } = req.body;
 
-    // Determine sentiment label based on score thresholds
-    if (sentimentScore > 2) {
-      sentimentLabel = 'positive';
-    } else if (sentimentScore < -2) {
-      sentimentLabel = 'negative';
+    // Validate the presence of the message
+    if (!message || typeof message !== 'string') {
+      logger.warn('Chat request received without a valid message.');
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid request: "message" is required and must be a string.',
+      });
     }
 
-    // Adjust system prompt based on sentiment
-    let systemPrompt = 'You are Zoltan, a helpful and friendly chatbot.';
-    if (sentimentLabel === 'positive') {
-      systemPrompt += ' Respond in an enthusiastic and uplifting manner.';
-    } else if (sentimentLabel === 'negative') {
-      systemPrompt += ' Respond in a supportive and empathetic manner.';
-    }
+    // Log the incoming message
+    logger.info(`Received message: "${message}"`);
 
-    // Prepare payload for OpenAI API
-    const openAIParams = {
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: systemPrompt,
-        },
-        {
-          role: 'user',
-          content: message,
-        },
-      ],
-      max_tokens: 150,
-      temperature: 0.7,
-    };
+    // Analyze the sentiment of the message
+    const sentimentScore = analyzeSentiment(message);
+    logger.info(`Sentiment score: ${sentimentScore}`);
 
-    // Communicate with OpenAI API
-    const openAIResponse = await axios.post(
-      'https://api.openai.com/v1/chat/completions',
-      openAIParams,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-        },
-        timeout: 10000, // 10 seconds timeout
-      }
-    );
+    // Generate a response based on the sentiment score
+    const reply = generateResponse(sentimentScore);
+    logger.info(`Generated reply: "${reply}"`);
 
-    // Extract bot message from OpenAI response
-    const botMessage = openAIResponse.data.choices[0].message.content.trim();
-
-    // Log successful interaction
-    logger.info(`User Message: "${message}" | Sentiment: ${sentimentLabel} (${sentimentScore})`);
-    logger.info(`Bot Reply: "${botMessage}"`);
-
-    // Respond to client with bot reply and sentiment data
-    res.status(200).json({
-      reply: botMessage,
-      sentiment: sentimentLabel,
-      sentimentScore: sentimentScore,
+    // Send the response back to the client
+    return res.status(200).json({
+      success: true,
+      reply,
     });
   } catch (error) {
-    // Log error details
-    if (error.response) {
-      // OpenAI API responded with an error status
-      logger.error(`OpenAI API Error: ${error.response.status} - ${error.response.data}`);
-      res.status(502).json({ error: 'Failed to communicate with OpenAI API.' });
-    } else if (error.request) {
-      // No response received from OpenAI API
-      logger.error('No response received from OpenAI API:', error.message);
-      res.status(504).json({ error: 'No response from OpenAI API. Please try again later.' });
-    } else {
-      // Other errors
-      logger.error('Unexpected Error:', error.message);
-      res.status(500).json({ error: 'An unexpected error occurred.' });
-    }
+    // Log the error with stack trace for debugging
+    logger.error('Error handling chat request:', error);
+
+    // Send a generic error response to the client
+    return res.status(500).json({
+      success: false,
+      message: 'An internal server error occurred. Please try again later.',
+    });
   }
 };
 
-module.exports = { handleChat };
+module.exports = {
+  handleChat,
+};

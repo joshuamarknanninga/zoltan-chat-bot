@@ -9,8 +9,11 @@ const sentiment = new Sentiment();
  * @param {string} text - The text to analyze.
  * @returns {object} - The sentiment analysis result.
  */
-const analyzeSentiment = (text) => {
-  return sentiment.analyze(text);
+const analyzeSentiment = (message) => {
+  const result = sentiment.analyze(message);
+  return result.score;
 };
 
-module.exports = { analyzeSentiment };
+module.exports = {
+  analyzeSentiment,
+};
