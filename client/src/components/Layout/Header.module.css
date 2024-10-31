@@ -1,0 +1,9 @@
+/* client/src/components/Layout/Header.module.css */
+
+.header {
+    background-color: #282c34;
+    padding: 15px 20px;
+    color: white;
+    text-align: center;
+  }
+  

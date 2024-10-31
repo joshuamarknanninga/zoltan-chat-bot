@@ -1,0 +1,86 @@
+/* client/src/components/Chat/Chat.module.css */
+
+.chatContainer {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 600px;
+    height: 80vh;
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .messages {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background-color: #f9f9f9;
+  }
+  
+  .message {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .sender {
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  .text {
+    background-color: #e1f5fe;
+    padding: 10px;
+    border-radius: 5px;
+    max-width: 80%;
+    word-wrap: break-word;
+  }
+  
+  .user .text {
+    background-color: #c8e6c9;
+    align-self: flex-end;
+  }
+  
+  .bot .text {
+    background-color: #e1f5fe;
+    align-self: flex-start;
+  }
+  
+  .inputForm {
+    display: flex;
+    border-top: 1px solid #ddd;
+  }
+  
+  .input {
+    flex: 1;
+    padding: 15px;
+    border: none;
+    font-size: 16px;
+  }
+  
+  .input:disabled {
+    background-color: #f0f0f0;
+  }
+  
+  .sendButton {
+    padding: 15px 20px;
+    border: none;
+    background-color: #4caf50;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .sendButton:hover:not(:disabled) {
+    background-color: #45a049;
+  }
+  
+  .sendButton:disabled {
+    background-color: #9e9e9e;
+    cursor: not-allowed;
+  }
+  

@@ -1,0 +1,17 @@
+/* client/src/App.module.css */
+
+.app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: #f0f4f8;
+  }
+  
+  .main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+  }
+  
